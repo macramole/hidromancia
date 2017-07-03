@@ -278,6 +278,7 @@ class WavesSearch {
     }
     public void draw() {
         stroke(0,0,255);
+        strokeWeight(1);
 
         for ( ArrayList<PVector> wave : wavesArray ) {
             for ( PVector point : wave ) {
@@ -287,6 +288,7 @@ class WavesSearch {
     }
     public void drawHorizontally() {
         stroke(0,0,255);
+        strokeWeight(1);
 
         pushMatrix();
         translate(0,height/2);

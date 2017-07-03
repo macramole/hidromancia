@@ -1,2 +1,13 @@
 build
 data/*
+bajadas/*
+
+hidromancia/data/*
+hidromanciaViz/data/*
+simpleDataSerieViewer/data/*
+wavesToFiles/data/*
+
+hidromancia/build/*
+hidromanciaViz/build/*
+simpleDataSerieViewer/build/*
+wavesToFiles/build/*
