@@ -39,8 +39,8 @@ void setup() {
   // agua = new Movie(this, "ocean.mid.mp4");
   agua = new Movie(this, "ocean.mid.m4v");
   aguaHD = new Movie(this, "ocean.fullhd.mp4");
-  agua.loop();
-  aguaHD.loop();
+  agua.play();
+  aguaHD.play();
 
   opencv = new OpenCV(this, VIDEO_WIDTH, VIDEO_HEIGHT);
   canvas = createGraphics(VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -119,8 +119,14 @@ void draw() {
   // drawAverageColorCircles();
 
   fill(255);
-  text( str(frameRate), 10, 20);
+  // text( str(frameRate), 10, 20);
   // text( mouseX + "," + mouseY, 10, 40 );
+
+  if ( agua.duration() - agua.time() <= 20 ) {
+      exit();
+  }
+
+  saveFrame("data/frames/out-######.tiff");
 }
 
 void drawAverageColorCircles() {
