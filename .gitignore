@@ -6,8 +6,10 @@ hidromancia/data/*
 hidromanciaViz/data/*
 simpleDataSerieViewer/data/*
 wavesToFiles/data/*
+videoCentral/data/*
 
 hidromancia/build/*
 hidromanciaViz/build/*
 simpleDataSerieViewer/build/*
 wavesToFiles/build/*
+videoCentral/build/*
