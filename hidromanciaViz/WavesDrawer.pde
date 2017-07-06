@@ -4,10 +4,9 @@ class WavesDrawer{
 
   int n;
   WaveDrawer[] waveDrawers;//= new WaveDrawer[n];
-  float[] radios = {0.25,0.2,0.1};
+  float[] radios = {0.2,0.25,0.1};
   float[] speeds = {SPEED,SPEED,SPEED};
   boolean[] doColor = {false, false, false};
-  color[] colors = { color(85, 173, 71), color(50, 129, 186), color(255) };
 
   ArrayList<ArrayList<PVector>> waves;
   // PGraphics canvas;

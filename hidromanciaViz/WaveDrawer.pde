@@ -50,7 +50,8 @@ class WaveDrawer{
         }
         // stroke(255);
         stroke(lineColor);
-        fill(25);
+        // fill(25);
+        noFill();
 
         if ( doColor ) {
             fill( averageColor );

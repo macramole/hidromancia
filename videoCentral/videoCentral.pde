@@ -5,8 +5,10 @@ Movie agua;
 PImage aguaEdges;
 PImage aguaSobel;
 
-final int VIDEO_WIDTH = 640;
-final int VIDEO_HEIGHT = 360;
+final int VIDEO_WIDTH = 800;
+final int VIDEO_HEIGHT = 450;
+
+color[] colors = { color(85, 173, 71), color(50, 129, 186), color(255) };
 
 OpenCV opencv;
 // int cannyLowThreshold = 211;
@@ -22,10 +24,13 @@ final int WAVES_QTY = 3;
 
 PrintWriter[] files;
 
-void setup() {
-  size(950, 950);
+void settings() {
+    size(VIDEO_WIDTH, VIDEO_HEIGHT);
+}
 
-  agua = new Movie(this, "ocean.mp4");
+void setup() {
+  // agua = new Movie(this, "ocean.mp4");
+  agua = new Movie(this, "ocean.mid.m4v");
   agua.play();
 
   opencv = new OpenCV(this, VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -34,19 +39,8 @@ void setup() {
 
   horizontalWaves = new ArrayList<ArrayList<PVector>>(3);
 
-  String path = "/home/macramole/Code/sketchbook/agua/data/";
-
-  files = new PrintWriter[3];
-
   for ( int i = 0 ; i < WAVES_QTY ; i++ ) {
     horizontalWaves.add( new ArrayList<PVector>() );
-
-    try {
-        // files[i] = new File(path + (i+1) + ".txt");
-        files[i] = new PrintWriter(path + (i+1) + ".txt", "UTF-8");
-    } catch (IOException e) {
-		e.printStackTrace();
-    }
 
   }
 
@@ -68,18 +62,38 @@ void draw() {
 
     updateEdges();
 
-    wavesSearch.searchWaves(aguaEdges);
-    addNewHorizontalWaves();
+    wavesSearch.searchWaves(aguaEdges.copy());
+    // addNewHorizontalWaves();
   }
 
+  // noTint();
   image(agua,0,0);
-  // image(aguaEdges, 0, 0);
 
+  // aguaEdges.loadPixels();
+  for ( int y = 0 ; y < height ; y++ ) {
+      for ( int x = 0 ; x < width ; x++ ) {
+          if ( aguaEdges.get(x,y) == color(255) ) {
+              aguaEdges.set( x,
+                  y,
+                  colors[ round( map(y, 0, VIDEO_HEIGHT,0,2 ) ) ] );
+          } else {
+              aguaEdges.set( x,
+                  y,
+                  color(0,0) );
+          }
+      }
+  }
+  // aguaEdges.updatePixels();
+
+  tint(255, 150);
+  image(aguaEdges, 0, 0);
+
+  noTint();
   // wavesSearch.drawCurrentWave();
   // if ( aguaSobel != null ) {
   //     image(aguaSobel,0,0);
   // }
-  // wavesSearch.draw();
+  // wavesSearch.drawCircles();
   // wavesSearch.drawHorizontally();
   // wavesSearch.drawHorizontallyThree( horizontalWaves );
   // wavesSearch.drawCurrentWaveHorizontally();
@@ -91,27 +105,13 @@ void draw() {
   //
   // text( str(frameRate), 10, 20); //con 14 frames me dropea a 30fps
 
+  saveFrame("out-######.png");
+
   if ( agua.duration() - agua.time() <= 0 ) {
-      for ( PrintWriter f : files ) {
-          f.close();
-          exit();
-      }
+      exit();
   }
 }
 
-//con 8 frames doy la vuelta
-void addNewHorizontalWaves() {
-    ArrayList<ArrayList<PVector>> newHorizontalWaves = wavesSearch.getHorizontalWaves(WAVES_QTY);
-
-    //agrego los nuevos waves del nuevo frame a los que ya tenía antes y los voy acumulando
-    for ( int i = 0 ; i < WAVES_QTY ; i++ ) {
-        ArrayList<PVector> newHorizontalWave = newHorizontalWaves.get(i);
-
-        for ( PVector point : newHorizontalWave ) {
-            files[i].println(point.y);
-        }
-    }
-}
 
 void keyTyped() {
   if ( key == ' ' ) {
@@ -178,7 +178,7 @@ void updateEdges() {
 
   aguaEdges = opencv.getSnapshot();
 
-  opencv.loadImage(agua);
+  // opencv.loadImage(agua);
   // opencv.findSobelEdges(0,1);
   // aguaSobel = opencv.getSnapshot();
 

@@ -1,7 +1,8 @@
-import processing.video.*; //<>// //<>//
+import processing.video.*; //<>// //<>// //<>// //<>//
 import gab.opencv.*;
 
 Movie agua;
+Movie aguaHD;
 PImage aguaEdges;
 PImage aguaSobel;
 
@@ -33,15 +34,19 @@ color averageColor = backgroundColor;
 
 ColorReduction colorReduction;
 
+color[] colors = { color(50, 129, 186), color(85, 173, 71) , color(255) };
+
 void setup() {
   size(1920, 1080);
 
   frameRate(15);
+  
+  // agua = new Movie(this, "ocean.mp4");
+  agua = new Movie(this, "ocean.mid.m4v");
+  aguaHD = new Movie(this, "ocean.fullhd.mp4");
+  agua.play();
+  aguaHD.play();
 
-  //agua = new Movie(this, "ocean.mp4");  
-  agua = new Movie(this, "ocean.mid.mp4");
-  // agua = new Movie(this, "ocean.hd.mp4");
-  agua.loop();
 
   opencv = new OpenCV(this, VIDEO_WIDTH, VIDEO_HEIGHT);
   canvas = createGraphics(VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -100,16 +105,26 @@ void draw() {
     // setAverageColor();
   }
 
-  wavesDrawer.draw();
+  tint(255, 20);
+  image(aguaHD, 0,0);
+
+  wavesDrawer.draw(); //<>//
+
   // image(wavesDrawer.getMask(2),0,0);
   if ( frameCount % WAVES_DRAWER_INTERPOLATION_FRAMECOUNT == 0 ) {
     wavesDrawer.update();
   }
 
+  if ( aguaHD.available() ) {
+      aguaHD.read();
+  }
+
   noTint();
-  image(agua, (width/2)-(VIDEO_WIDTH/2), height/2-(VIDEO_HEIGHT/2));
-  tint(0, 255, 0, 80);
-  image(aguaEdges, (width/2)-(VIDEO_WIDTH/2), height/2-(VIDEO_HEIGHT/2));
+
+  image(agua, (width/2)-(VIDEO_WIDTH/2) , height/2-(VIDEO_HEIGHT/2));
+  // tint(0, 255, 0, 80);
+  tint(255, 150);
+  image(aguaEdges, (width/2)-(VIDEO_WIDTH/2) , height/2-(VIDEO_HEIGHT/2));
 
   // drawAverageColorCircles();
   if (saveFrame) {
@@ -117,9 +132,15 @@ void draw() {
   }
 
   fill(255);
-  text( str(frameRate), 10, 20); 
+  // text( str(frameRate), 10, 20);
   // text( mouseX + "," + mouseY, 10, 40 );
   atFrame++;
+
+
+  if ( agua.duration() - agua.time() <= 20 ) {
+      exit();
+  }
+
 }
 
 void drawAverageColorCircles() {
@@ -209,10 +230,35 @@ void updateEdges() {
   //opencv.findScharrEdges(OpenCV.BOTH);
   opencv.findCannyEdges(cannyLowThreshold, cannyHighThreshold);
 
-  opencv.dilate();
+  // opencv.dilate();
   //opencv.erode();
 
   aguaEdges = opencv.getSnapshot();
+
+  // for ( int i = 0 ; i < aguaEdges.length ; i++ ) {
+  //     if ( aguaEdges. == color(255) ) {
+  //         aguaEdges.set( x,
+  //             y,
+  //             colors[ round( map(y, 0, VIDEO_HEIGHT,0,2 ) ) ] );
+  //     } else {
+  //         aguaEdges.set( x,
+  //             y,
+  //             color(0,0) );
+  //     }
+  //
+  // }
+
+  aguaEdges.loadPixels();
+  for ( int y = 0 ; y < aguaEdges.height ; y++ ) {
+      for ( int x = 0 ; x < aguaEdges.width ; x++ ) {
+          if ( aguaEdges.pixels[y*aguaEdges.width+x] == color(255) ) {
+              aguaEdges.pixels[y*aguaEdges.width+x] = colors[ round( map(y, 0, VIDEO_HEIGHT,0,2 ) ) ];
+          } else {
+              aguaEdges.pixels[y*aguaEdges.width+x] = color(0,0);
+          }
+      }
+  }
+  aguaEdges.updatePixels();
 
   // opencv.loadImage(agua);
   // opencv.findSobelEdges(0,1);

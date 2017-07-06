@@ -1,6 +1,7 @@
 class WavesSearch {
     ArrayList < ArrayList<PVector> > wavesArray;
     int currentWaveIndex = -1;
+    color[] colors = { color(85, 173, 71), color(50, 129, 186), color(255) };
 
     PVector[][][] kernelNeighbors = {
         { { new PVector(1,0), new PVector(0,1) }, { new PVector(-1,0), new PVector(1,0) }, { new PVector(-1,0), new PVector(0,1) } },
@@ -277,13 +278,33 @@ class WavesSearch {
         }
     }
     public void draw() {
-        stroke(0,0,255);
-        strokeWeight(1);
+
+
+
+        strokeWeight(2);
 
         for ( ArrayList<PVector> wave : wavesArray ) {
+            stroke( colors[ round(random(0,2)) ] );
             for ( PVector point : wave ) {
                 point( point.x, point.y );
             }
+        }
+    }
+    public void drawCircles() {
+        strokeWeight(1);
+        noStroke();
+
+        for ( ArrayList<PVector> wave : wavesArray ) {
+            PVector point = wave.get(0);
+
+
+            fill(colors[ round( map(point.y, 0, VIDEO_HEIGHT,0,2 ) ) ], 100);
+            // stroke( colors[ round( map(point.y, 0, VIDEO_HEIGHT,0,2 ) ) ] );
+
+            ellipse( point.x, point.y, wave.size(), wave.size() );
+            // for ( PVector point : wave ) {
+            //     point( point.x, point.y );
+            // }
         }
     }
     public void drawHorizontally() {
