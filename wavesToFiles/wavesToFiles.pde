@@ -34,7 +34,8 @@ void setup() {
 
   horizontalWaves = new ArrayList<ArrayList<PVector>>(3);
 
-  String path = "/home/macramole/Code/ide-projects/processing3/hidromancia/wavesToFiles/data/";
+  //String path = "/home/macramole/Code/ide-projects/processing3/hidromancia/wavesToFiles/data/";
+  String path = "/home/tomas/sketchbook/hidromancia/wavesToFiles/data/";
   files = new PrintWriter[3];
 
   for ( int i = 0 ; i < WAVES_QTY ; i++ ) {
