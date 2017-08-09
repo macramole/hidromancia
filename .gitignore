@@ -12,3 +12,4 @@ wavesToFiles/build/*
 videoCentral/build/*
 
 getSentiments/node_modules
+.Rproj.user

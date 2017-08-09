@@ -17,10 +17,9 @@ boolean needFrame = true;
 
 WavesSearch wavesSearch;
 
-ArrayList<ArrayList<PVector>> horizontalWaves;
-final int WAVES_QTY = 3;
+PrintWriter file;
 
-PrintWriter[] files;
+int lastID = -1;
 
 void setup() {
   size(950, 950);
@@ -32,22 +31,13 @@ void setup() {
 
   wavesSearch = new WavesSearch();
 
-  horizontalWaves = new ArrayList<ArrayList<PVector>>(3);
-
   String path = "/home/macramole/Code/sketchbook/hidromancia/data/";
 
-  files = new PrintWriter[3];
-
-  for ( int i = 0 ; i < WAVES_QTY ; i++ ) {
-    horizontalWaves.add( new ArrayList<PVector>() );
-
-    try {
-        // files[i] = new File(path + (i+1) + ".txt");
-        files[i] = new PrintWriter(path + (i+1) + ".txt", "UTF-8");
-    } catch (IOException e) {
-		e.printStackTrace();
-    }
-
+  try {
+      file = new PrintWriter(path + "wavesWithID.tsv", "UTF-8");
+      file.println("y\tid");
+  } catch (IOException e) {
+      e.printStackTrace();
   }
 
   // smooth(10);
@@ -69,7 +59,7 @@ void draw() {
     updateEdges();
 
     wavesSearch.searchWaves(aguaEdges);
-    addNewHorizontalWaves();
+    saveWavesWithID();
   }
 
   image(agua,0,0);
@@ -92,23 +82,20 @@ void draw() {
   // text( str(frameRate), 10, 20); //con 14 frames me dropea a 30fps
 
   if ( agua.duration() - agua.time() <= 0 ) {
-      for ( PrintWriter f : files ) {
-          f.close();
-          exit();
-      }
+      file.close();
+      exit();
   }
 }
+void saveWavesWithID() {
+    for ( ArrayList<PVector> wave : wavesSearch.wavesArray )  {
+        lastID++;
+        PVector first = wave.get(0);
 
-//con 8 frames doy la vuelta
-void addNewHorizontalWaves() {
-    ArrayList<ArrayList<PVector>> newHorizontalWaves = wavesSearch.getHorizontalWaves(WAVES_QTY);
+        for ( PVector point : wave ) {
+            float y = point.y - first.y;
 
-    //agrego los nuevos waves del nuevo frame a los que ya tenía antes y los voy acumulando
-    for ( int i = 0 ; i < WAVES_QTY ; i++ ) {
-        ArrayList<PVector> newHorizontalWave = newHorizontalWaves.get(i);
-
-        for ( PVector point : newHorizontalWave ) {
-            files[i].println(point.y);
+            String row = y + "\t" + lastID;
+            file.println(row);
         }
     }
 }
@@ -120,10 +107,8 @@ void keyTyped() {
   }
 
   if ( key == 'x' )  {
-      for ( PrintWriter f : files ) {
-          f.close();
-          exit();
-      }
+      file.close();
+      exit();
   }
 
   if ( key == 'q' ) {
