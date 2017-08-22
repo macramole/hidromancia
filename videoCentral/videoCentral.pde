@@ -5,15 +5,17 @@ Movie agua;
 PImage aguaEdges;
 PImage aguaSobel;
 
-final int VIDEO_WIDTH = 800;
-final int VIDEO_HEIGHT = 450;
+final int VIDEO_WIDTH = 1280;
+final int VIDEO_HEIGHT = 720;
 
 color[] colors = { color(85, 173, 71), color(50, 129, 186), color(255) };
 
 OpenCV opencv;
 // int cannyLowThreshold = 211;
-int cannyLowThreshold = 1;
-int cannyHighThreshold = 300;
+// int cannyLowThreshold = 1;
+// int cannyHighThreshold = 300;
+int cannyLowThreshold = 170;
+int cannyHighThreshold = 380;
 
 boolean needFrame = true;
 
@@ -30,7 +32,7 @@ void settings() {
 
 void setup() {
   // agua = new Movie(this, "ocean.mp4");
-  agua = new Movie(this, "ocean.mid.m4v");
+  agua = new Movie(this, "ocean.hd.mp4");
   agua.play();
 
   opencv = new OpenCV(this, VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -62,33 +64,58 @@ void draw() {
 
     updateEdges();
 
-    wavesSearch.searchWaves(aguaEdges.copy());
+    // wavesSearch.searchWaves(aguaEdges.copy());
     // addNewHorizontalWaves();
+
+    aguaEdges.loadPixels();
+    for ( int i = 0; i < width * height ; i++ ) {
+        if ( aguaEdges.pixels[i] == color(0) ) {
+            //y*width+x
+            aguaEdges.pixels[i] = color(0,0);
+        } else {
+            aguaEdges.pixels[i] = color(255,0, 0);
+        }
+    }
+    // for ( int y = 0 ; y < height ; y++ ) {
+    //     for ( int x = 0 ; x < width ; x++ ) {
+    //         if ( aguaEdges.get(x,y) == color(0) ) {
+    //             aguaEdges.set( x,
+    //                 y,
+    //                 color(0,0) );
+    //         } else {
+    //             aguaEdges.set( x,
+    //                 y,
+    //                 color(255,0,0) );
+    //         }
+    //     }
+    // }
+    aguaEdges.updatePixels();
   }
 
   // noTint();
   image(agua,0,0);
 
   // aguaEdges.loadPixels();
-  for ( int y = 0 ; y < height ; y++ ) {
-      for ( int x = 0 ; x < width ; x++ ) {
-          if ( aguaEdges.get(x,y) == color(255) ) {
-              aguaEdges.set( x,
-                  y,
-                  colors[ round( map(y, 0, VIDEO_HEIGHT,0,2 ) ) ] );
-          } else {
-              aguaEdges.set( x,
-                  y,
-                  color(0,0) );
-          }
-      }
-  }
+  // for ( int y = 0 ; y < height ; y++ ) {
+  //     for ( int x = 0 ; x < width ; x++ ) {
+  //         if ( aguaEdges.get(x,y) == color(255) ) {
+  //             aguaEdges.set( x,
+  //                 y,
+  //                 colors[ round( map(y, 0, VIDEO_HEIGHT,0,2 ) ) ] );
+  //         } else {
+  //             aguaEdges.set( x,
+  //                 y,
+  //                 color(0,0) );
+  //         }
+  //     }
+  // }
   // aguaEdges.updatePixels();
 
-  tint(255, 150);
+
+  // tint(255, 150);
   image(aguaEdges, 0, 0);
 
-  noTint();
+  // noTint();
   // wavesSearch.drawCurrentWave();
   // if ( aguaSobel != null ) {
   //     image(aguaSobel,0,0);
@@ -105,11 +132,13 @@ void draw() {
   //
   // text( str(frameRate), 10, 20); //con 14 frames me dropea a 30fps
 
-  saveFrame("out-######.png");
+  // saveFrame("data/videoAnalizado/pngs/out-######.tiff");
 
   if ( agua.duration() - agua.time() <= 0 ) {
       exit();
   }
+
+  frame.setTitle(str(frameRate));
 }
 
 

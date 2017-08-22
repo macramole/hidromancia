@@ -19,7 +19,8 @@ lengthSentiments = length(df[["anger"]])
 
 par( mfrow = c(1,1) )
 
-df.waves = read.csv( "../data/wavesWithID.tsv", sep = "\t" )
+# df.waves = read.csv( "../data/wavesWithID.tsv", sep = "\t" )
+df.waves = read.csv( "../data/wavesPerFrame.tsv", sep = "\t" )
 
 
 # plot(df.wave[1:lengthSentiments], type="l")
@@ -32,9 +33,15 @@ df.waves = read.csv( "../data/wavesWithID.tsv", sep = "\t" )
 # filter( seno2ruidounif ,rep(1/3,3), circular =TRUE)
 
 
-maxCrossCorrelations = data.frame( id = numeric(), 
-                                   maxCorrelation = numeric(),
-                                   sentiment = character())
+# maxCrossCorrelations = data.frame( id = numeric(), 
+#                                    maxCorrelation = numeric(),
+#                                    sentiment = character())
+maxCrossCorrelations = data.frame( id = numeric(),
+                                   anger = numeric(),
+                                   fear = numeric(),
+                                   joy = numeric(),
+                                   love = numeric(),
+                                   sadness = numeric() )
 
 for ( i in 0:max(df.waves$id) ) {
   currentWave = df.waves[ df.waves$id == i, "y" ]
@@ -54,18 +61,27 @@ for ( i in 0:max(df.waves$id) ) {
     currentCrossCorrelations = c(currentCrossCorrelations, max(as.numeric(crossCorrelation$acf)) ) 
   }
   
-  maxCrossCorrelation = max(currentCrossCorrelations)
+  # maxCrossCorrelation = max(currentCrossCorrelations)
+  # maxCrossCorrelations = rbind( maxCrossCorrelations, data.frame(
+  #   id = i,
+  #   maxCorrelation = maxCrossCorrelation,
+  #   sentiment = sentiments[ which.max( currentCrossCorrelations ) ]
+  # ) )
   maxCrossCorrelations = rbind( maxCrossCorrelations, data.frame(
     id = i,
-    maxCorrelation = maxCrossCorrelation,
-    sentiment = sentiments[ which.max( currentCrossCorrelations ) ]
+    anger = currentCrossCorrelations[1],
+    fear = currentCrossCorrelations[2],
+    joy = currentCrossCorrelations[3],
+    love = currentCrossCorrelations[4],
+    sadness = currentCrossCorrelations[5]
   ) )
 }
 # par( mfrow = c(1,2) )
-corr = 0.9
+corr = 0.7
 row = maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ][1,]
 
-maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ]
+# maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ]
+maxCrossCorrelations[ maxCrossCorrelations$anger > corr, ]
 nrow(maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ])
 
 # plot( df.wave[ row$waveFrom:row$waveTo ], type="l" )
@@ -76,3 +92,5 @@ plot( maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ]$sentim
 
 # a = ccf( df[["anger"]],  df.1[1:lengthSentiments], main = sentiment )
 
+# write.csv(maxCrossCorrelations, file="maxCrossCorrelationsSingleWave.tsv", )
+write.table(maxCrossCorrelations[,2:6], file="../data/maxCrossCorrelationsPerFrame.tsv", sep="\t", row.names = F )

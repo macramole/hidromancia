@@ -21,6 +21,10 @@ PrintWriter file;
 
 int lastID = -1;
 
+//true es cada id es por frame
+//false es wave por wave con diferentes id.
+final boolean WAVES_PER_FRAME = true;
+
 void setup() {
   size(950, 950);
 
@@ -34,7 +38,11 @@ void setup() {
   String path = "/home/macramole/Code/sketchbook/hidromancia/data/";
 
   try {
-      file = new PrintWriter(path + "wavesWithID.tsv", "UTF-8");
+      if ( WAVES_PER_FRAME ) {
+          file = new PrintWriter(path + "wavesPerFrame.tsv", "UTF-8");
+      } else {
+          file = new PrintWriter(path + "wavesWithID.tsv", "UTF-8");
+      }
       file.println("y\tid");
   } catch (IOException e) {
       e.printStackTrace();
@@ -59,7 +67,12 @@ void draw() {
     updateEdges();
 
     wavesSearch.searchWaves(aguaEdges);
-    saveWavesWithID();
+
+    if ( WAVES_PER_FRAME ) {
+        saveWavesPerFrame();
+    } else {
+        saveWavesWithID();
+    }
   }
 
   image(agua,0,0);
@@ -97,6 +110,13 @@ void saveWavesWithID() {
             String row = y + "\t" + lastID;
             file.println(row);
         }
+    }
+}
+void saveWavesPerFrame() {
+    lastID++;
+    for ( PVector point : wavesSearch.getHorizontalWave() )  {
+        String row = point.y + "\t" + lastID;
+        file.println(row);
     }
 }
 
