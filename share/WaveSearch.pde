@@ -1,5 +1,6 @@
 class WavesSearch {
     ArrayList < ArrayList<PVector> > wavesArray;
+    ArrayList < ArrayList<PVector> > wavesRejectedArray;
     int currentWaveIndex = -1;
     color[] colors = { color(85, 173, 71), color(50, 129, 186), color(255) };
 
@@ -15,6 +16,7 @@ class WavesSearch {
 
     WavesSearch() {
         wavesArray = new ArrayList < ArrayList<PVector> >();
+        wavesRejectedArray = new ArrayList < ArrayList<PVector> >();
     }
 
     public void searchWaves(PImage tex) {
@@ -22,6 +24,7 @@ class WavesSearch {
         // int currentCantWaves = 0;
 
         wavesArray.clear();
+        wavesRejectedArray.clear();
 
         color currentPixel;
         tex.loadPixels();
@@ -55,8 +58,28 @@ class WavesSearch {
 
         ArrayList<PVector> foundWave = searchWave( point, kernel, tex, waveArray );
 
-        if ( foundWave != null && foundWave.size() > WAVES_MIN_THRESHOLD && isWaveAFunction(foundWave) ) {
-            wavesArray.add( fixWave(foundWave) );
+        if ( foundWave != null && foundWave.size() > WAVES_MIN_THRESHOLD ) {
+            if ( isWaveAFunction(foundWave) ) {
+                wavesArray.add( fixWave(foundWave) );
+            } else {
+
+                //me fijo si una sub wave mas chica sí es función
+                for ( int length = foundWave.size() - 1 ; length > WAVES_MIN_THRESHOLD ; length-- ) {
+                    int start = 0;
+                    int end = start + length;
+                    while( end < foundWave.size() ) {
+                        ArrayList<PVector> subFoundWave = new ArrayList<PVector>( foundWave.subList(start,end) );
+                        if ( isWaveAFunction( subFoundWave ) ) {
+                            wavesArray.add( fixWave(subFoundWave) );
+                            return;
+                        }
+                        start++;
+                        end++;
+                    }
+                }
+                
+                wavesRejectedArray.add( fixWave(foundWave) ); //esto lo estoy usando en el draw nada mas
+            }
         }
     }
     private ArrayList<PVector> searchWave(PVector point, float[][] kernel, PImage tex, ArrayList<PVector> waveArray) {
@@ -278,17 +301,32 @@ class WavesSearch {
         }
     }
     public void draw() {
-
-
-
         strokeWeight(2);
 
+        stroke(255,0,0);
         for ( ArrayList<PVector> wave : wavesArray ) {
-            stroke( colors[ round(random(0,2)) ] );
+            // stroke( colors[ round(random(0,2)) ] );
             for ( PVector point : wave ) {
                 point( point.x, point.y );
             }
         }
+
+
+        stroke(0,255,0);
+        fill(0,255,0);
+        for ( ArrayList<PVector> wave : wavesRejectedArray ) {
+            // stroke( colors[ round(random(0,2)) ] );
+            for ( PVector point : wave ) {
+                point( point.x, point.y );
+            }
+        }
+
+        fill(255,0,0);
+        text("Waves saved: " + str(wavesArray.size()), 10, height - 40);
+        text("Waves rejected: " + str(wavesRejectedArray.size()) + " (" +
+            ((float)wavesRejectedArray.size()/(wavesRejectedArray.size()+wavesArray.size())) * 100 + "%)",
+            10,
+            height - 20);
     }
     public void drawCircles() {
         strokeWeight(1);

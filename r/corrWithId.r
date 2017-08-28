@@ -6,6 +6,20 @@ df = list()
 for ( sentiment in sentiments ) {
   df[ sentiment ] = read.csv( paste("../data/sentiments/", sentiment, ".txt", sep = ""), header = F)
 }
+
+df.all = data.frame(
+  anger = df[["anger"]],
+  fear = df[["fear"]],
+  joy = df[["joy"]],
+  love = df[["love"]],
+  sadness = df[["sadness"]]
+)
+
+library("dplyr")
+
+df.all %>%
+  mutate( total = anger + fear + joy + love + sadness )
+
 for ( sentiment in sentiments ) {
   df[[ sentiment ]] = as.numeric( scale( df[[ sentiment ]] ) )
 }
@@ -54,11 +68,12 @@ for ( i in 0:max(df.waves$id) ) {
   
   for ( sentiment in sentiments ) {
     # esto es solo con lag 0
-    # crossCorrelation = ccf( df[[sentiment]],  currentWave, main = sentiment, lag.max = 0, plot = F )
-    # currentCrossCorrelations = c(currentCrossCorrelations, crossCorrelation$acf[1] ) 
-    
-    crossCorrelation = ccf( currentWave, df[[sentiment]]  , main = sentiment, plot = F, lag.max = 300 )
-    currentCrossCorrelations = c(currentCrossCorrelations, max(as.numeric(crossCorrelation$acf)) ) 
+    crossCorrelation = ccf( df[[sentiment]],  currentWave, main = sentiment, lag.max = 0, plot = F )
+    currentCrossCorrelations = c(currentCrossCorrelations, crossCorrelation$acf[1] )
+
+    # este saca el maximo lag    
+    # crossCorrelation = ccf( currentWave, df[[sentiment]]  , main = sentiment, plot = F, lag.max = 300 )
+    # currentCrossCorrelations = c(currentCrossCorrelations, max(as.numeric(crossCorrelation$acf)) ) 
   }
   
   # maxCrossCorrelation = max(currentCrossCorrelations)
@@ -77,7 +92,7 @@ for ( i in 0:max(df.waves$id) ) {
   ) )
 }
 # par( mfrow = c(1,2) )
-corr = 0.7
+corr = 0.6
 row = maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ][1,]
 
 # maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ]

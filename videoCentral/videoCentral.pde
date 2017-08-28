@@ -58,13 +58,13 @@ void draw() {
     agua.read();
 
     /** Comentar esto para pasar de cuadro por cuadro a play */
-    // needFrame = false;
-    // agua.pause();
+    needFrame = false;
+    agua.pause();
     /***/
 
     updateEdges();
 
-    // wavesSearch.searchWaves(aguaEdges.copy());
+    wavesSearch.searchWaves(aguaEdges.copy());
     // addNewHorizontalWaves();
 
     aguaEdges.loadPixels();
@@ -73,7 +73,7 @@ void draw() {
             //y*width+x
             aguaEdges.pixels[i] = color(0,0);
         } else {
-            aguaEdges.pixels[i] = color(255,0, 0);
+            aguaEdges.pixels[i] = color(0,255, 0);
         }
     }
     // for ( int y = 0 ; y < height ; y++ ) {
@@ -94,7 +94,11 @@ void draw() {
 
   // noTint();
   image(agua,0,0);
+  if ( aguaEdges != null ) {
+      image(aguaEdges, 0, 0);
+  }
 
+  wavesSearch.draw();
   // aguaEdges.loadPixels();
   // for ( int y = 0 ; y < height ; y++ ) {
   //     for ( int x = 0 ; x < width ; x++ ) {
@@ -113,7 +117,7 @@ void draw() {
 
 
   // tint(255, 150);
-  image(aguaEdges, 0, 0);
+  // image(aguaEdges, 0, 0);
 
   // noTint();
   // wavesSearch.drawCurrentWave();
@@ -138,7 +142,7 @@ void draw() {
       exit();
   }
 
-  frame.setTitle(str(frameRate));
+  surface.setTitle(str(frameRate));
 }
 
 

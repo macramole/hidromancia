@@ -10,8 +10,10 @@ final int VIDEO_HEIGHT = 360;
 
 OpenCV opencv;
 // int cannyLowThreshold = 211;
-int cannyLowThreshold = 1;
-int cannyHighThreshold = 300;
+// int cannyLowThreshold = 1;
+// int cannyHighThreshold = 300;
+int cannyLowThreshold = 170;
+int cannyHighThreshold = 380;
 
 boolean needFrame = true;
 
@@ -35,7 +37,8 @@ void setup() {
 
   wavesSearch = new WavesSearch();
 
-  String path = "/home/macramole/Code/sketchbook/hidromancia/data/";
+  // String path = "/home/macramole/Code/sketchbook/hidromancia/data/";
+  String path = "/home/macramole/Code/ide-projects/processing3/hidromancia/data/";
 
   try {
       if ( WAVES_PER_FRAME ) {
@@ -76,6 +79,7 @@ void draw() {
   }
 
   image(agua,0,0);
+  wavesSearch.draw();
   // image(aguaEdges, 0, 0);
 
   // wavesSearch.drawCurrentWave();
@@ -124,6 +128,9 @@ void keyTyped() {
   if ( key == ' ' ) {
     agua.play();
     needFrame = true;
+  }
+  if ( key == 't' ) {
+    println(agua.duration() - agua.time());
   }
 
   if ( key == 'x' )  {
