@@ -77,7 +77,7 @@ class WavesSearch {
                         end++;
                     }
                 }
-                
+
                 wavesRejectedArray.add( fixWave(foundWave) ); //esto lo estoy usando en el draw nada mas
             }
         }
@@ -312,14 +312,14 @@ class WavesSearch {
         }
 
 
-        stroke(0,255,0);
-        fill(0,255,0);
-        for ( ArrayList<PVector> wave : wavesRejectedArray ) {
-            // stroke( colors[ round(random(0,2)) ] );
-            for ( PVector point : wave ) {
-                point( point.x, point.y );
-            }
-        }
+        // stroke(0,255,0);
+        // fill(0,255,0);
+        // for ( ArrayList<PVector> wave : wavesRejectedArray ) {
+        //     // stroke( colors[ round(random(0,2)) ] );
+        //     for ( PVector point : wave ) {
+        //         point( point.x, point.y );
+        //     }
+        // }
 
         fill(255,0,0);
         text("Waves saved: " + str(wavesArray.size()), 10, height - 40);

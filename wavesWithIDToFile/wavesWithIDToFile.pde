@@ -12,8 +12,10 @@ OpenCV opencv;
 // int cannyLowThreshold = 211;
 // int cannyLowThreshold = 1;
 // int cannyHighThreshold = 300;
-int cannyLowThreshold = 170;
-int cannyHighThreshold = 380;
+// int cannyLowThreshold = 170;
+// int cannyHighThreshold = 380;
+int cannyLowThreshold = 30;
+int cannyHighThreshold = 250;
 
 boolean needFrame = true;
 
@@ -37,8 +39,8 @@ void setup() {
 
   wavesSearch = new WavesSearch();
 
-  // String path = "/home/macramole/Code/sketchbook/hidromancia/data/";
-  String path = "/home/macramole/Code/ide-projects/processing3/hidromancia/data/";
+  String path = "/home/macramole/Code/sketchbook/hidromancia/data/";
+  // String path = "/home/macramole/Code/ide-projects/processing3/hidromancia/data/";
 
   try {
       if ( WAVES_PER_FRAME ) {
@@ -61,6 +63,7 @@ void draw() {
 
   if ( needFrame && agua.available() ) {
     agua.read();
+    agua.pause();
 
     /** Comentar esto para pasar de cuadro por cuadro a play */
     // needFrame = false;
@@ -76,6 +79,7 @@ void draw() {
     } else {
         saveWavesWithID();
     }
+    agua.play();
   }
 
   image(agua,0,0);
@@ -95,13 +99,14 @@ void draw() {
   //     wavesDrawer.draw(horizontalWaves);
   //     wavesDrawer.update(horizontalWaves);
   // }
-  //
-  // text( str(frameRate), 10, 20); //con 14 frames me dropea a 30fps
+
 
   if ( agua.duration() - agua.time() <= 0 ) {
       file.close();
       exit();
   }
+
+  surface.setTitle(str(frameRate));
 }
 void saveWavesWithID() {
     for ( ArrayList<PVector> wave : wavesSearch.wavesArray )  {

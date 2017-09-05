@@ -17,39 +17,36 @@ df.all = data.frame(
 
 library("dplyr")
 
-df.all %>%
-  mutate( total = anger + fear + joy + love + sadness )
+df.all = df.all %>%
+  mutate( total = anger + fear + joy + love + sadness ) %>%
+  mutate( anger = anger/total,  fear = fear/total, joy = joy/total, love = love/total, sadness = sadness/total )
+
+# for ( sentiment in sentiments ) {
+#   df[[ sentiment ]] = as.numeric( scale( df[[ sentiment ]] ) )
+# }
+# par( mfrow = c(2,3) )
+# for ( sentiment in sentiments ) {
+#   plot( df[[ sentiment ]], type = "l", main = sentiment, ylab = "twit count", xlab = "hours" )
+# }
 
 for ( sentiment in sentiments ) {
-  df[[ sentiment ]] = as.numeric( scale( df[[ sentiment ]] ) )
+  df.all[, sentiment] = as.numeric( scale( df.all[, sentiment] ) )
 }
-
 par( mfrow = c(2,3) )
 for ( sentiment in sentiments ) {
-  plot( df[[ sentiment ]], type = "l", main = sentiment, ylab = "twit count", xlab = "hours" )
+  plot( df.all[, sentiment], type = "l", main = sentiment, ylab = "twit count", xlab = "hours" )
 }
-
-lengthSentiments = length(df[["anger"]])
-
 par( mfrow = c(1,1) )
+
+# lengthSentiments = length(df[["anger"]])
+lengthSentiments = length(df.all[, "anger"])
+
+
 
 # df.waves = read.csv( "../data/wavesWithID.tsv", sep = "\t" )
 df.waves = read.csv( "../data/wavesPerFrame.tsv", sep = "\t" )
+#plot( stats::filter(df.waves[ df.waves$id == 1, "y" ], rep(1/6,6), circular = T), type = "l")
 
-
-# plot(df.wave[1:lengthSentiments], type="l")
-# par( mfrow = c(2,3) )
-# for ( sentiment in sentiments ) {
-#   ccf( df[[sentiment]],  df.1[1:lengthSentiments], main = sentiment )
-# }
-# par( mfrow = c(1,1) )
-
-# filter( seno2ruidounif ,rep(1/3,3), circular =TRUE)
-
-
-# maxCrossCorrelations = data.frame( id = numeric(), 
-#                                    maxCorrelation = numeric(),
-#                                    sentiment = character())
 maxCrossCorrelations = data.frame( id = numeric(),
                                    anger = numeric(),
                                    fear = numeric(),
@@ -61,19 +58,29 @@ for ( i in 0:max(df.waves$id) ) {
   currentWave = df.waves[ df.waves$id == i, "y" ]
   
   if ( all( currentWave == rep(0, length(currentWave)) ) ) {
+    maxCrossCorrelations = rbind( maxCrossCorrelations, data.frame(
+      id = i,
+      anger = 0,
+      fear = 0,
+      joy = 0,
+      love = 0,
+      sadness = 0
+    ) )
     next
   }
+  
+  currentWave = stats::filter(currentWave, rep(1/6,6), circular = T)
   
   currentCrossCorrelations = c()
   
   for ( sentiment in sentiments ) {
     # esto es solo con lag 0
-    crossCorrelation = ccf( df[[sentiment]],  currentWave, main = sentiment, lag.max = 0, plot = F )
+    crossCorrelation = ccf( df.all[,sentiment],  currentWave, main = sentiment, lag.max = 0, plot = F )
     currentCrossCorrelations = c(currentCrossCorrelations, crossCorrelation$acf[1] )
 
     # este saca el maximo lag    
-    # crossCorrelation = ccf( currentWave, df[[sentiment]]  , main = sentiment, plot = F, lag.max = 300 )
-    # currentCrossCorrelations = c(currentCrossCorrelations, max(as.numeric(crossCorrelation$acf)) ) 
+    # crossCorrelation = ccf( currentWave, df.all[,sentiment], main = sentiment, plot = F, lag.max = 700 )
+    # currentCrossCorrelations = c(currentCrossCorrelations, max(as.numeric(crossCorrelation$acf)) )
   }
   
   # maxCrossCorrelation = max(currentCrossCorrelations)
@@ -91,13 +98,10 @@ for ( i in 0:max(df.waves$id) ) {
     sadness = currentCrossCorrelations[5]
   ) )
 }
-# par( mfrow = c(1,2) )
-corr = 0.6
-row = maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ][1,]
 
-# maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ]
-maxCrossCorrelations[ maxCrossCorrelations$anger > corr, ]
-nrow(maxCrossCorrelations[ maxCrossCorrelations$maxCorrelation > corr, ])
+corr = 0.6
+maxCrossCorrelations[ abs(maxCrossCorrelations$joy) > corr, ]
+
 
 # plot( df.wave[ row$waveFrom:row$waveTo ], type="l" )
 # plot( df[[ row$sentiment ]], type="l" )

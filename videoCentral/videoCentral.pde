@@ -14,8 +14,10 @@ OpenCV opencv;
 // int cannyLowThreshold = 211;
 // int cannyLowThreshold = 1;
 // int cannyHighThreshold = 300;
-int cannyLowThreshold = 170;
-int cannyHighThreshold = 380;
+// int cannyLowThreshold = 170;
+// int cannyHighThreshold = 380;
+int cannyLowThreshold = 30;
+int cannyHighThreshold = 250;
 
 boolean needFrame = true;
 
@@ -67,36 +69,23 @@ void draw() {
     wavesSearch.searchWaves(aguaEdges.copy());
     // addNewHorizontalWaves();
 
-    aguaEdges.loadPixels();
-    for ( int i = 0; i < width * height ; i++ ) {
-        if ( aguaEdges.pixels[i] == color(0) ) {
-            //y*width+x
-            aguaEdges.pixels[i] = color(0,0);
-        } else {
-            aguaEdges.pixels[i] = color(0,255, 0);
-        }
-    }
-    // for ( int y = 0 ; y < height ; y++ ) {
-    //     for ( int x = 0 ; x < width ; x++ ) {
-    //         if ( aguaEdges.get(x,y) == color(0) ) {
-    //             aguaEdges.set( x,
-    //                 y,
-    //                 color(0,0) );
-    //         } else {
-    //             aguaEdges.set( x,
-    //                 y,
-    //                 color(255,0,0) );
-    //         }
+    // aguaEdges.loadPixels();
+    // for ( int i = 0; i < width * height ; i++ ) {
+    //     if ( aguaEdges.pixels[i] == color(0) ) {
+    //         //y*width+x
+    //         aguaEdges.pixels[i] = color(0,0);
+    //     } else {
+    //         aguaEdges.pixels[i] = color(0,255, 0);
     //     }
     // }
-    aguaEdges.updatePixels();
+    // aguaEdges.updatePixels();
   }
 
   // noTint();
   image(agua,0,0);
-  if ( aguaEdges != null ) {
-      image(aguaEdges, 0, 0);
-  }
+  // if ( aguaEdges != null ) {
+  //     image(aguaEdges, 0, 0);
+  // }
 
   wavesSearch.draw();
   // aguaEdges.loadPixels();

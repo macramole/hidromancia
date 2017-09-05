@@ -15,6 +15,7 @@ final int FIELD_JOY = 2;
 final int FIELD_LOVE = 3;
 final int FIELD_SADNESS = 4;
 final String[] STR_SENTIMENTS = { "Enojo", "Miedo", "Goce", "Amor", "Tristeza" };
+int[] sentimentsScore;
 
 final int BAR_WIDTH = 80;
 final int BAR_HEIGHT = 400;
@@ -32,10 +33,13 @@ void setup() {
     agua = new Movie(this, "ocean.hd.mp4");
     agua.play();
 
+    sentimentsScore = new int[QTY_SENTIMENTS];
+
     loadWaves();
     loadSentimentsCorrelation();
 
     frameRate(24);
+    smooth();
 }
 
 void loadWaves() {
@@ -114,6 +118,7 @@ void loadSentimentsCorrelation() {
 
 void draw() {
     background(0);
+
     if ( agua.available() ) {
         agua.read();
         currentFrame++;
@@ -126,14 +131,18 @@ void draw() {
         image(agua, 0, 0);
     // popMatrix();
 
-    drawWaves();
-    drawSentiments();
+    // drawWaves();
+    // drawSentiments();
+    drawSentiments2();
 
     frame.setTitle(str(frameRate));
+    if ( agua.duration() - agua.time() <= 0 ) {
+        exit();
+    }
 }
 
 void drawSentiments() {
-    if ( currentFrame >= qtyFrames ) {
+    if ( currentFrame >= qtyFrames || currentFrame < 0 ) {
         return;
     }
 
@@ -160,9 +169,25 @@ void drawSentiments() {
 
 
         noStroke();
+        float maxSentimentCorrelation = -1;
+        int maxSentimentCorrelationIndex = -1;
+
         for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+            float corr = correlation[i];
+            if ( corr > maxSentimentCorrelation ) {
+                maxSentimentCorrelation = corr;
+                maxSentimentCorrelationIndex = i;
+            }
+        }
+
+        sentimentsScore[maxSentimentCorrelationIndex]++;
+
+        for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+            color c = color( red(BAR_COLORS[i]), green(BAR_COLORS[i]), blue(BAR_COLORS[i]), 100 );
+            fill(c);
+            rect(0, 0, BAR_WIDTH, -BAR_HEIGHT * -abs(correlation[i]) );
             fill( BAR_COLORS[i] );
-            rect(0, 0, BAR_WIDTH, -BAR_HEIGHT * correlation[i]);
+            rect(0, 0, BAR_WIDTH, -BAR_HEIGHT * sentimentsScore[i] / (qtyFrames/2));
 
             fill(255);
             text( STR_SENTIMENTS[i], BAR_WIDTH / 2, 15 );
@@ -170,6 +195,92 @@ void drawSentiments() {
             translate(BAR_WIDTH + BAR_GAP, 0);
         }
     popMatrix();
+}
+
+void drawSentiments2() {
+    if ( currentFrame >= qtyFrames || currentFrame < 0 ) {
+        return;
+    }
+
+    float[] correlation = correlations[currentFrame];
+    int radius = 200;
+
+    float maxSentimentCorrelation = -1;
+    int maxSentimentCorrelationIndex = -1;
+
+    for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+        float corr = correlation[i];
+        if ( corr > maxSentimentCorrelation ) {
+            maxSentimentCorrelation = corr;
+            maxSentimentCorrelationIndex = i;
+        }
+    }
+
+    sentimentsScore[maxSentimentCorrelationIndex]++;
+
+    // ArrayList<PVector> v = new ArrayList<PVector>();
+
+    pushMatrix();
+        translate(width/2,height/2);
+
+        textAlign(CENTER);
+        ellipseMode(CENTER);
+
+        rotate(PI);
+        for ( int i = 0 ; i < 5 ; i++ ) {
+            rotate(1.25664); //72 deg (https://en.wikipedia.org/wiki/Pentagon#Regular_pentagons)
+            pushMatrix();
+                translate(0,-radius*0.5);
+
+                //Barras de sentimientos acumulados
+                color c = color(
+                    red(BAR_COLORS[i]),
+                    green(BAR_COLORS[i]),
+                    blue(BAR_COLORS[i]),
+                    180
+                );
+                // fill(BAR_COLORS[i]);
+                fill(c);
+                noStroke();
+                rect( ( -radius/2 ) *0.73 ,0,radius *0.73,-sentimentsScore[i]);
+                fill(255);
+                int pentagonWidth = 6;
+                rect( ( -radius/2 ) *0.73 ,0,radius *0.73, pentagonWidth);
+
+                stroke(255);
+                strokeWeight(1);
+                patternLine( ( -radius/1.3 ) *0.73 ,-50, (radius/1.4) *0.73, -50,  0x5555, 5);
+                patternLine( ( -radius ) *0.73 ,-100, (radius) *0.73, -100,  0x5555, 5);
+                patternLine( ( -radius ) *0.9 ,-150, (radius) *0.9, -150,  0x5555, 5);
+
+                //Barras de sentimientos instantaneos
+                stroke(BAR_COLORS[i]);
+                strokeWeight(2);
+                beginShape();
+                    vertex(0, pentagonWidth + 1);
+                    vertex(0, abs(correlation[i]) * radius );
+                endShape();
+
+                // v.add( new PVector(
+                //     modelX(0, abs(correlation[i]) * radius, 0 ),
+                //     modelY(0, abs(correlation[i]) * radius, 0 )
+                // ) );
+                fill(BAR_COLORS[i]);
+                ellipse(0, abs(correlation[i]) * radius + 5, 5, 5);
+
+                //Texto de sentimiento
+                fill(255);
+                text(STR_SENTIMENTS[i],0,-5);
+            popMatrix();
+        }
+        // translate(width/2,height/2);
+        // for ( PVector p : v ) {
+        //     ellipse(p.x,p.y, 5, 5);
+        // }
+
+    popMatrix();
+
+
 }
 
 void drawWaves() {
@@ -201,4 +312,65 @@ void drawWaves() {
             point( i, 0 );
         }
     popMatrix();
+}
+
+//based on Bresenham's algorithm from wikipedia
+//http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+
+void patternLine(float xStart, float yStart, float xEnd, float yEnd, int linePattern, int lineScale) {
+  float temp, yStep, x, y;
+  int pattern = linePattern;
+  int carry;
+  int count = lineScale;
+
+  boolean steep = (abs(yEnd - yStart) > abs(xEnd - xStart));
+  if (steep == true) {
+    temp = xStart;
+    xStart = yStart;
+    yStart = temp;
+    temp = xEnd;
+    xEnd = yEnd;
+    yEnd = temp;
+  }
+  if (xStart > xEnd) {
+    temp = xStart;
+    xStart = xEnd;
+    xEnd = temp;
+    temp = yStart;
+    yStart = yEnd;
+    yEnd = temp;
+  }
+  float deltaX = xEnd - xStart;
+  float deltaY = abs(yEnd - yStart);
+  float error = - (deltaX + 1) / 2;
+
+  y = yStart;
+  if (yStart < yEnd) {
+    yStep = 1;
+  } else {
+    yStep = -1;
+  }
+  for (x = xStart; x <= xEnd; x++) {
+    if ((pattern & 1) == 1) {
+	if (steep == true) {
+	  point(y, x);
+	} else {
+	  point(x, y);
+	}
+	carry = 0x8000;
+    } else {
+	carry = 0;
+    }
+    count--;
+    if (count <= 0) {
+	pattern = (pattern >> 1) + carry;
+	count = lineScale;
+    }
+
+    error += deltaY;
+    if (error >= 0) {
+	y += yStep;
+	error -= deltaX;
+    }
+  }
 }
