@@ -1,11 +1,16 @@
 import processing.video.*;
 
 Movie agua;
+PImage aguaFrameCurrent;
+PImage aguaFramePrevious;
+final int AGUA_INBETWEEN_FRAMES = 10;
+
 ArrayList<ArrayList<PVector>> waves;
 // ArrayList<SentimentsCorrelation> correlations;
 float[][] correlations;
 
 int currentFrame = -1;
+int currentFrameNeeded = 0;
 int qtyFrames = 0;
 
 final int QTY_SENTIMENTS = 5;
@@ -116,32 +121,75 @@ void loadSentimentsCorrelation() {
     }
 }
 
-void draw() {
-    background(0);
+void updateSentimentsScore() {
+    if ( currentFrame >= qtyFrames || currentFrame < 0 ) {
+        return;
+    }
 
-    if ( agua.available() ) {
+    float[] correlation = correlations[currentFrame];
+
+    float maxSentimentCorrelation = -1;
+    int maxSentimentCorrelationIndex = -1;
+
+    for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+        float corr = correlation[i];
+        if ( corr > maxSentimentCorrelation ) {
+            maxSentimentCorrelation = corr;
+            maxSentimentCorrelationIndex = i;
+        }
+    }
+
+    sentimentsScore[maxSentimentCorrelationIndex]++;
+}
+
+void draw() {
+    background(0); //<>//
+
+    if ( frameCount % AGUA_INBETWEEN_FRAMES == 0 ) {
+        currentFrameNeeded++;
+        agua.play();
+        aguaFramePrevious = aguaFrameCurrent.copy();
+    }
+
+    if ( currentFrame < currentFrameNeeded && agua.available() ) {
         agua.read();
+        agua.pause();
         currentFrame++;
+
+        aguaFrameCurrent = (PImage)agua;
+        updateSentimentsScore();
     }
     //
     // pushMatrix();
     //     translate(width/2,height/2);
     //     rotate(PI/2);
     //     translate(-agua.width/2,-agua.height/2);
-        image(agua, 0, 0);
+        // image(agua, 0, 0);
     // popMatrix();
 
+    drawAgua();
     // drawWaves();
-    // drawSentiments();
-    drawSentiments2();
+    drawSentiments();
 
-    frame.setTitle(str(frameRate));
+    surface.setTitle(str(frameRate));
     if ( agua.duration() - agua.time() <= 0 ) {
         exit();
     }
 }
 
-void drawSentiments() {
+void drawAgua() {
+    if ( aguaFramePrevious != null ) {
+        image(aguaFramePrevious, 0, 0);
+    }
+    if ( aguaFrameCurrent != null ) {
+        int opacity = round ( map(frameCount % AGUA_INBETWEEN_FRAMES, 0, AGUA_INBETWEEN_FRAMES-1, 0, 255) );
+        tint(255, opacity);
+        image(aguaFrameCurrent, 0, 0);
+        noTint();
+    }
+}
+
+void drawSentimentsOld() {
     if ( currentFrame >= qtyFrames || currentFrame < 0 ) {
         return;
     }
@@ -197,27 +245,21 @@ void drawSentiments() {
     popMatrix();
 }
 
-void drawSentiments2() {
+void drawSentiments() {
     if ( currentFrame >= qtyFrames || currentFrame < 0 ) {
         return;
     }
 
     float[] correlation = correlations[currentFrame];
-    int radius = 200;
+    float[] correlationNext = correlations[currentFrame+1];
 
-    float maxSentimentCorrelation = -1;
-    int maxSentimentCorrelationIndex = -1;
-
-    for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
-        float corr = correlation[i];
-        if ( corr > maxSentimentCorrelation ) {
-            maxSentimentCorrelation = corr;
-            maxSentimentCorrelationIndex = i;
-        }
+    float lerpAmount = map(frameCount % AGUA_INBETWEEN_FRAMES, 0, AGUA_INBETWEEN_FRAMES-1, 0, 1);
+    //si esta desincronizado bancala en 1 hasta que se sincronice
+    if (currentFrameNeeded > currentFrame) {
+        lerpAmount = 1.0;
     }
 
-    sentimentsScore[maxSentimentCorrelationIndex]++;
-
+    int radius = 200;
     // ArrayList<PVector> v = new ArrayList<PVector>();
 
     pushMatrix();
@@ -226,7 +268,7 @@ void drawSentiments2() {
         textAlign(CENTER);
         ellipseMode(CENTER);
 
-        rotate(PI);
+        rotate(PI / 2);
         for ( int i = 0 ; i < 5 ; i++ ) {
             rotate(1.25664); //72 deg (https://en.wikipedia.org/wiki/Pentagon#Regular_pentagons)
             pushMatrix();
@@ -242,7 +284,7 @@ void drawSentiments2() {
                 // fill(BAR_COLORS[i]);
                 fill(c);
                 noStroke();
-                rect( ( -radius/2 ) *0.73 ,0,radius *0.73,-sentimentsScore[i]);
+                rect( ( -radius/2 ) *0.73 ,0,radius *0.73,-sentimentsScore[i]/2);
                 fill(255);
                 int pentagonWidth = 6;
                 rect( ( -radius/2 ) *0.73 ,0,radius *0.73, pentagonWidth);
@@ -252,13 +294,16 @@ void drawSentiments2() {
                 patternLine( ( -radius/1.3 ) *0.73 ,-50, (radius/1.4) *0.73, -50,  0x5555, 5);
                 patternLine( ( -radius ) *0.73 ,-100, (radius) *0.73, -100,  0x5555, 5);
                 patternLine( ( -radius ) *0.9 ,-150, (radius) *0.9, -150,  0x5555, 5);
+                patternLine( ( -radius ) *1.1 ,-200, (radius) *1.1, -200,  0x5555, 5);
 
                 //Barras de sentimientos instantaneos
+                float lerpValue = lerp(abs(correlation[i]),abs(correlationNext[i]), lerpAmount);
+
                 stroke(BAR_COLORS[i]);
                 strokeWeight(2);
                 beginShape();
                     vertex(0, pentagonWidth + 1);
-                    vertex(0, abs(correlation[i]) * radius );
+                    vertex(0, lerpValue * radius );
                 endShape();
 
                 // v.add( new PVector(
@@ -266,7 +311,7 @@ void drawSentiments2() {
                 //     modelY(0, abs(correlation[i]) * radius, 0 )
                 // ) );
                 fill(BAR_COLORS[i]);
-                ellipse(0, abs(correlation[i]) * radius + 5, 5, 5);
+                ellipse(0, lerpValue * radius + 5, 5, 5);
 
                 //Texto de sentimiento
                 fill(255);
