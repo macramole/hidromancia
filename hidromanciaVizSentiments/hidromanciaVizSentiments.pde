@@ -21,6 +21,9 @@ final int FIELD_LOVE = 3;
 final int FIELD_SADNESS = 4;
 final String[] STR_SENTIMENTS = { "Enojo", "Miedo", "Goce", "Amor", "Tristeza" };
 int[] sentimentsScore;
+float[] sentimentsScoreProportion;
+float[] sentimentsScoreProportionPrevious;
+int indexLastSentimentScored;
 
 final int BAR_WIDTH = 80;
 final int BAR_HEIGHT = 400;
@@ -31,14 +34,16 @@ final int GRAPH_WIDTH = QTY_SENTIMENTS * BAR_WIDTH + (QTY_SENTIMENTS - 1) * BAR_
 final color[] BAR_COLORS = { color(87,184,148),color(249,120,80),color(123,141,191),color(223,114,182),color(151,211,67) };
 
 void setup() {
-    size(1280, 720);
+    // size(1280, 720);
+    size(1920, 1080);
     // size(720, 1280);
 
     // agua = new Movie(this, "ocean.hd.mp4");
-    agua = new Movie(this, "ocean.hd.mp4");
+    agua = new Movie(this, "ocean.processed.mp4");
+    // agua = new Movie(this, "ocean.fullhd.mp4");
     agua.play();
 
-    sentimentsScore = new int[QTY_SENTIMENTS];
+    initSentimentsScore();
 
     loadWaves();
     loadSentimentsCorrelation();
@@ -121,6 +126,16 @@ void loadSentimentsCorrelation() {
     }
 }
 
+void initSentimentsScore() {
+    sentimentsScore = new int[QTY_SENTIMENTS];
+    sentimentsScoreProportion = new float[QTY_SENTIMENTS];
+    sentimentsScoreProportionPrevious = new float[QTY_SENTIMENTS];
+
+    for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+        sentimentsScoreProportion[i] = sentimentsScoreProportionPrevious[i] = (float)1/QTY_SENTIMENTS;
+        sentimentsScore[i] = 1;
+    }
+}
 void updateSentimentsScore() {
     if ( currentFrame >= qtyFrames || currentFrame < 0 ) {
         return;
@@ -140,6 +155,17 @@ void updateSentimentsScore() {
     }
 
     sentimentsScore[maxSentimentCorrelationIndex]++;
+    indexLastSentimentScored = maxSentimentCorrelationIndex;
+
+    //sentimentsScoreProportion
+    int sumScores = 0;
+    for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+        sumScores += sentimentsScore[i];
+        sentimentsScoreProportionPrevious[i] = sentimentsScoreProportion[i];
+    }
+    for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+        sentimentsScoreProportion[i] = (float)sentimentsScore[i] / sumScores;
+    }
 }
 
 void draw() {
@@ -168,7 +194,7 @@ void draw() {
     // popMatrix();
 
     drawAgua();
-    // drawWaves();
+    drawWaves();
     drawSentiments();
 
     surface.setTitle(str(frameRate));
@@ -182,10 +208,22 @@ void drawAgua() {
         image(aguaFramePrevious, 0, 0);
     }
     if ( aguaFrameCurrent != null ) {
-        int opacity = round ( map(frameCount % AGUA_INBETWEEN_FRAMES, 0, AGUA_INBETWEEN_FRAMES-1, 0, 255) );
+        // int opacity = round ( map(frameCount % AGUA_INBETWEEN_FRAMES, 0, AGUA_INBETWEEN_FRAMES-1, 0, 255) );
+        int opacity = round ( getLerpAmount() * 255 );
         tint(255, opacity);
         image(aguaFrameCurrent, 0, 0);
         noTint();
+    }
+
+    //para que no sea tan brilloso
+    stroke(0,40);
+    strokeWeight(1);
+    noFill();
+    for ( int x = 0 ; x < width ; x+=2 ) {
+        beginShape();
+            vertex(x,0);
+            vertex(x,height);
+        endShape();
     }
 }
 
@@ -253,11 +291,7 @@ void drawSentiments() {
     float[] correlation = correlations[currentFrame];
     float[] correlationNext = correlations[currentFrame+1];
 
-    float lerpAmount = map(frameCount % AGUA_INBETWEEN_FRAMES, 0, AGUA_INBETWEEN_FRAMES-1, 0, 1);
-    //si esta desincronizado bancala en 1 hasta que se sincronice
-    if (currentFrameNeeded > currentFrame) {
-        lerpAmount = 1.0;
-    }
+    float lerpAmount = getLerpAmount();
 
     int radius = 200;
     // ArrayList<PVector> v = new ArrayList<PVector>();
@@ -268,8 +302,45 @@ void drawSentiments() {
         textAlign(CENTER);
         ellipseMode(CENTER);
 
+
+
+
+        //background Pentagons
+        pushMatrix();
+            rotate(PI);
+            // fill(0,40);
+            noFill();
+            strokeWeight(50);
+            // stroke(255,0,0);
+            stroke(0,60);
+            polygon(0,0, 340, 5);
+            stroke(0,45);
+            // stroke(0,255,0);
+            polygon(0,0, 280, 5);
+            stroke(0,30);
+            // stroke(0,0,255);
+            polygon(0,0, 220, 5);
+            stroke(0,15);
+            // stroke(0,255,255);
+            polygon(0,0, 160, 5);
+        popMatrix();
+
+
+        fill(0,60);
+        noStroke();
+        pushMatrix();
+            rotate(PI / 2);
+            for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
+                rotate(1.25664); //72 deg (https://en.wikipedia.org/wiki/Pentagon#Regular_pentagons)
+                pushMatrix();
+                    translate(0,-radius*0.5);
+                    rect( ( -radius/2 ) *0.73 ,0,radius *0.73, 150);
+                popMatrix();
+            }
+        popMatrix();
+
         rotate(PI / 2);
-        for ( int i = 0 ; i < 5 ; i++ ) {
+        for ( int i = 0 ; i < QTY_SENTIMENTS ; i++ ) {
             rotate(1.25664); //72 deg (https://en.wikipedia.org/wiki/Pentagon#Regular_pentagons)
             pushMatrix();
                 translate(0,-radius*0.5);
@@ -279,39 +350,58 @@ void drawSentiments() {
                     red(BAR_COLORS[i]),
                     green(BAR_COLORS[i]),
                     blue(BAR_COLORS[i]),
-                    180
+                    160
                 );
+
+                if ( i == indexLastSentimentScored ) {
+                    // float lerpValueColor = lerp(160,255, lerpAmount);
+                    // c = color(
+                    //     red(BAR_COLORS[i]),
+                    //     green(BAR_COLORS[i]),
+                    //     blue(BAR_COLORS[i]),
+                    //     lerpValueColor
+                    // );
+                    c = BAR_COLORS[i];
+                }
+
                 // fill(BAR_COLORS[i]);
-                fill(c);
+                float lerpValue = lerp(abs(sentimentsScoreProportionPrevious[i]),abs(sentimentsScoreProportion[i]), lerpAmount);
                 noStroke();
-                rect( ( -radius/2 ) *0.73 ,0,radius *0.73,-sentimentsScore[i]/2);
+
+                //barra
+                fill(c);
+                rect( ( -radius/2 ) *0.73 ,0,radius *0.73,-lerpValue*500);
                 fill(255);
+                //main Pentagon
                 int pentagonWidth = 6;
                 rect( ( -radius/2 ) *0.73 ,0,radius *0.73, pentagonWidth);
 
                 stroke(255);
                 strokeWeight(1);
-                patternLine( ( -radius/1.3 ) *0.73 ,-50, (radius/1.4) *0.73, -50,  0x5555, 5);
+                patternLine( ( -radius/1.3 ) *0.73 ,-55, (radius/1.4) *0.73, -55,  0x5555, 5);
                 patternLine( ( -radius ) *0.73 ,-100, (radius) *0.73, -100,  0x5555, 5);
                 patternLine( ( -radius ) *0.9 ,-150, (radius) *0.9, -150,  0x5555, 5);
                 patternLine( ( -radius ) *1.1 ,-200, (radius) *1.1, -200,  0x5555, 5);
 
                 //Barras de sentimientos instantaneos
-                float lerpValue = lerp(abs(correlation[i]),abs(correlationNext[i]), lerpAmount);
+                lerpValue = lerp(abs(correlation[i]),abs(correlationNext[i]), lerpAmount);
 
-                stroke(BAR_COLORS[i]);
+                // stroke(BAR_COLORS[i]);
+                noFill();
+                stroke(c);
                 strokeWeight(2);
                 beginShape();
                     vertex(0, pentagonWidth + 1);
-                    vertex(0, lerpValue * radius );
+                    vertex(0, radius/2 + lerpValue * radius );
                 endShape();
 
                 // v.add( new PVector(
                 //     modelX(0, abs(correlation[i]) * radius, 0 ),
                 //     modelY(0, abs(correlation[i]) * radius, 0 )
                 // ) );
-                fill(BAR_COLORS[i]);
-                ellipse(0, lerpValue * radius + 5, 5, 5);
+                // fill(BAR_COLORS[i]);
+                fill(c);
+                ellipse(0, radius/2 + lerpValue * radius + 5, 5, 5);
 
                 //Texto de sentimiento
                 fill(255);
@@ -333,30 +423,77 @@ void drawWaves() {
         return;
     }
     ArrayList<PVector> wave = waves.get(currentFrame);
-    int padNeeded = width - wave.size();
-    if ( padNeeded < 0 ) {
-        padNeeded = 0;
-    }
+    ArrayList<PVector> waveNext = waves.get(currentFrame + 1);
+    // int padNeeded = width - wave.size();
+    // if ( padNeeded < 0 ) {
+    //     padNeeded = 0;
+    // }
+    float lerpAmount = getLerpAmount();
 
     stroke(255);
-    strokeWeight(2);
+    strokeWeight(1);
+    noFill();
+
+    float lastPoint = 0;
+    int cantCols = 1;
+    final int MAX_COLS = 7;
 
     pushMatrix();
-        translate(0,height/2 + GRAPH_WIDTH / 2 + 50);
-        for ( int i = 0 ; i < padNeeded/2 ; i++ ) {
-            point( i, 0 );
-        }
-        for ( PVector point : wave ) {
-            point( point.x + padNeeded/2, point.y );
+        translate(width - width/5,0);
+        fill(255,80);
+        
+        pushMatrix();
+            translate(-50,0);
+            // fill(255);
+            text("Olas encontradas:",0,0);
+        popMatrix();
 
-            if ( point.x > width ) {
-                break;
+        // for ( int i = 0 ; i < padNeeded/2 ; i++ ) {
+        //     point( i, 0 );
+        // }
+        beginShape();
+        float lerpValue;
+        // for ( PVector point : wave ) {
+        for ( int i = 0 ; i < wave.size() ; i++ ) {
+            PVector point = wave.get(i);
+            PVector pointNext;
+
+            if ( i < waveNext.size() ) {
+                pointNext = waveNext.get(i);
+            } else {
+                pointNext = point;
+            }
+
+            // point( point.x + padNeeded/2, point.y );
+            // point( point.y, point.x - lastPoint );
+            lerpValue = lerp(point.y, pointNext.y, lerpAmount);
+            vertex( lerpValue + cantCols * 25, point.x - lastPoint );
+
+            if ( point.x - lastPoint > height ) {
+                // break;
+                endShape();
+                cantCols++;
+                lastPoint = point.x;
+                if ( cantCols == MAX_COLS ) {
+                    break;
+                }
+                beginShape();
             }
         }
-        for ( int i = wave.size() + padNeeded/2 ; i < width ; i++ ) {
-            point( i, 0 );
-        }
+        endShape();
+        // for ( int i = wave.size() + padNeeded/2 ; i < height ; i++ ) {
+        //     point( i, 0 );
+        // }
     popMatrix();
+}
+
+float getLerpAmount() {
+    float lerpAmount = map(frameCount % AGUA_INBETWEEN_FRAMES, 0, AGUA_INBETWEEN_FRAMES-1, 0, 0.96);
+    //si esta desincronizado bancala en 1 hasta que se sincronice
+    if (currentFrameNeeded > currentFrame) {
+        lerpAmount = 1.0;
+    }
+    return lerpAmount;
 }
 
 //based on Bresenham's algorithm from wikipedia
@@ -418,4 +555,15 @@ void patternLine(float xStart, float yStart, float xEnd, float yEnd, int linePat
 	error -= deltaX;
     }
   }
+}
+
+void polygon(float x, float y, float radius, int npoints) {
+  float angle = TWO_PI / npoints;
+  beginShape();
+  for (float a = 0; a < TWO_PI; a += angle) {
+    float sx = x + cos(a) * radius;
+    float sy = y + sin(a) * radius;
+    vertex(sx, sy);
+  }
+  endShape(CLOSE);
 }

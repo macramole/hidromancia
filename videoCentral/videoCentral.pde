@@ -5,8 +5,10 @@ Movie agua;
 PImage aguaEdges;
 PImage aguaSobel;
 
-final int VIDEO_WIDTH = 1280;
-final int VIDEO_HEIGHT = 720;
+// final int VIDEO_WIDTH = 1280;
+// final int VIDEO_HEIGHT = 720;
+final int VIDEO_WIDTH = 1920;
+final int VIDEO_HEIGHT = 1080;
 
 color[] colors = { color(85, 173, 71), color(50, 129, 186), color(255) };
 
@@ -20,6 +22,9 @@ int cannyLowThreshold = 30;
 int cannyHighThreshold = 250;
 
 boolean needFrame = true;
+boolean gotNewFrame = false;
+int frameNumber = 0;
+
 
 WavesSearch wavesSearch;
 
@@ -34,7 +39,8 @@ void settings() {
 
 void setup() {
   // agua = new Movie(this, "ocean.mp4");
-  agua = new Movie(this, "ocean.hd.mp4");
+  // agua = new Movie(this, "ocean.hd.mp4");
+  agua = new Movie(this, "ocean.fullhd.mp4");
   agua.play();
 
   opencv = new OpenCV(this, VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -55,13 +61,16 @@ void setup() {
 
 void draw() {
     background(25);
+    gotNewFrame = false;
 
   if ( needFrame && agua.available() ) {
     agua.read();
-
-    /** Comentar esto para pasar de cuadro por cuadro a play */
-    needFrame = false;
+    gotNewFrame = true;
+    frameNumber++;
     agua.pause();
+    /** Comentar esto para pasar de cuadro por cuadro a play */
+    // needFrame = false;
+    // agua.pause();
     /***/
 
     updateEdges();
@@ -125,13 +134,16 @@ void draw() {
   //
   // text( str(frameRate), 10, 20); //con 14 frames me dropea a 30fps
 
-  // saveFrame("data/videoAnalizado/pngs/out-######.tiff");
+  if ( gotNewFrame ) {
+      saveFrame("data/videoAnalizado/pngs/out-" + String.format("%6d", frameNumber) + ".tiff");
+  }
 
   if ( agua.duration() - agua.time() <= 0 ) {
       exit();
   }
 
   surface.setTitle(str(frameRate));
+  agua.play();
 }
 
 

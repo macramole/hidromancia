@@ -301,14 +301,17 @@ class WavesSearch {
         }
     }
     public void draw() {
-        strokeWeight(2);
+        strokeWeight(1);
 
         stroke(255,0,0);
+        noFill();
         for ( ArrayList<PVector> wave : wavesArray ) {
             // stroke( colors[ round(random(0,2)) ] );
+            beginShape();
             for ( PVector point : wave ) {
-                point( point.x, point.y );
+                vertex( point.x, point.y );
             }
+            endShape();
         }
 
 
@@ -321,12 +324,12 @@ class WavesSearch {
         //     }
         // }
 
-        fill(255,0,0);
-        text("Waves saved: " + str(wavesArray.size()), 10, height - 40);
-        text("Waves rejected: " + str(wavesRejectedArray.size()) + " (" +
-            ((float)wavesRejectedArray.size()/(wavesRejectedArray.size()+wavesArray.size())) * 100 + "%)",
-            10,
-            height - 20);
+        // fill(255,0,0);
+        // text("Waves saved: " + str(wavesArray.size()), 10, height - 40);
+        // text("Waves rejected: " + str(wavesRejectedArray.size()) + " (" +
+        //     ((float)wavesRejectedArray.size()/(wavesRejectedArray.size()+wavesArray.size())) * 100 + "%)",
+        //     10,
+        //     height - 20);
     }
     public void drawCircles() {
         strokeWeight(1);
